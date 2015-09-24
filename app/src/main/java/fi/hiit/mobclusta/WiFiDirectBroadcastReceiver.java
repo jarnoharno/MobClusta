@@ -42,7 +42,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
             // Call WifiP2pManager.requestPeers() to get a list of current peers
             Log.d("WiFi P2P peers changed");
             WifiP2pDeviceList devices = intent.getParcelableExtra(WifiP2pManager.EXTRA_P2P_DEVICE_LIST);
-            Log.d("peers: %s", devices.toString());
+            mActivity.setPeers(devices);
         } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
             // Respond to new connection or disconnections
             Log.d("WiFi P2P connection changed");

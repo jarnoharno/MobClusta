@@ -1,15 +1,18 @@
 package fi.hiit.mobclusta;
 
 import android.content.Context;
+import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toolbar;
 
 public class NetworkFragment extends Fragment implements NetworkListener {
@@ -26,6 +29,9 @@ public class NetworkFragment extends Fragment implements NetworkListener {
     }
 
     private boolean mScanning = false;
+
+    private LinearLayout availableList;
+    private LinearLayout availableScanning;
 
     @Nullable
     @Override
@@ -45,6 +51,7 @@ public class NetworkFragment extends Fragment implements NetworkListener {
                             Log.d("started scanning");
                             item.setEnabled(true);
                             item.setTitle(R.string.action_stop_scan);
+                            availableScanning.setVisibility(View.VISIBLE);
                             mScanning = true;
                         }
 
@@ -53,6 +60,7 @@ public class NetworkFragment extends Fragment implements NetworkListener {
                             Log.d("failed to start scanning");
                             item.setEnabled(true);
                             item.setTitle(R.string.action_scan);
+                            availableScanning.setVisibility(View.INVISIBLE);
                             mScanning = false;
                         }
                     });
@@ -63,13 +71,16 @@ public class NetworkFragment extends Fragment implements NetworkListener {
                             Log.d("stopped scanning");
                             item.setEnabled(true);
                             item.setTitle(R.string.action_scan);
+                            availableScanning.setVisibility(View.INVISIBLE);
                             mScanning = false;
                         }
+
                         @Override
                         public void onFailure(int reason) {
                             Log.d("failed to stop scanning");
                             item.setEnabled(true);
                             item.setTitle(R.string.action_stop_scan);
+                            availableScanning.setVisibility(View.VISIBLE);
                             mScanning = true;
                         }
                     });
@@ -78,6 +89,8 @@ public class NetworkFragment extends Fragment implements NetworkListener {
             }
         });
         wifiP2pEnabled(provider.wifiP2pEnabled());
+        availableList = (LinearLayout) view.findViewById(R.id.available_list);
+        availableScanning = (LinearLayout) view.findViewById(R.id.available_scanning);
         return view;
     }
 
@@ -87,6 +100,21 @@ public class NetworkFragment extends Fragment implements NetworkListener {
             MenuItem item = toolbar.getMenu().getItem(0);
             item.setEnabled(enabled);
             item.setVisible(enabled);
+        }
+    }
+
+    @Override
+    public void setPeerList(WifiP2pDeviceList peers) {
+        availableList.removeAllViews();
+        LayoutInflater layoutInflater = getActivity().getLayoutInflater();
+        for (WifiP2pDevice device : peers.getDeviceList()) {
+            View view = layoutInflater.inflate(android.R.layout.simple_list_item_2, availableList,
+                    false);
+            TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+            TextView text2 = (TextView) view.findViewById(android.R.id.text2);
+            text1.setText(device.deviceName);
+            text2.setText(device.deviceAddress);
+            availableList.addView(view);
         }
     }
 

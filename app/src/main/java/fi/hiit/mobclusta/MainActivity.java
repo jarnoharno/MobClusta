@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.IntentFilter;
+import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
@@ -131,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
 
     @Override
     public void stopPeerDiscovery(final WifiP2pManager.ActionListener listener) {
-        mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
+        mManager.stopPeerDiscovery(mChannel, new WifiP2pManager.ActionListener() {
 
             @Override
             public void onSuccess() {
@@ -143,5 +144,17 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                 listener.onFailure(reason);
             }
         });
+    }
+
+    public void setPeers(WifiP2pDeviceList peers) {
+        Iterator<NetworkListener> iterator = networkListeners.iterator();
+        while (iterator.hasNext()) {
+            NetworkListener listener = iterator.next();
+            if (listener == null) {
+                iterator.remove();
+            } else {
+                listener.setPeerList(peers);
+            }
+        }
     }
 }
