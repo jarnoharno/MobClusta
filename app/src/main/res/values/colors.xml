@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="indicator">#ffffff</color>
+    <color name="disconnected">#1976D2</color>
+    <color name="owner">#00ff00</color>
+    <color name="client">#ffff00</color>
+</resources>
