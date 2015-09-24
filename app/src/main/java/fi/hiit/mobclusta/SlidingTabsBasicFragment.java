@@ -25,7 +25,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import fi.hiit.mobclusta.common.logger.Log;
 import fi.hiit.mobclusta.common.view.SlidingTabLayout;
 
 /**
@@ -34,8 +33,6 @@ import fi.hiit.mobclusta.common.view.SlidingTabLayout;
  * when scrolling.
  */
 public class SlidingTabsBasicFragment extends Fragment {
-
-    static final String LOG_TAG = "SlidingTabsBasicFragment";
 
     /**
      * A custom {@link ViewPager} title strip which looks much like Tabs present in Android v4.0 and
@@ -147,8 +144,6 @@ public class SlidingTabsBasicFragment extends Fragment {
             TextView title = (TextView) view.findViewById(R.id.item_title);
             title.setText(String.valueOf(position + 1));
 
-            Log.i(LOG_TAG, "instantiateItem() [position: " + position + "]");
-
             // Return the View
             return view;
         }
@@ -160,7 +155,6 @@ public class SlidingTabsBasicFragment extends Fragment {
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
             container.removeView((View) object);
-            Log.i(LOG_TAG, "destroyItem() [position: " + position + "]");
         }
 
     }
