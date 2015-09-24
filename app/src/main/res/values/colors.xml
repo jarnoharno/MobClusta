@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="indicator">#ffffff</color>
-    <color name="disconnected">#1976D2</color>
+    <color name="color">#FFFFFF</color>
+    <color name="primary">#2196F3</color>
+    <color name="primary_dark">#1976D2</color>
+    <color name="accent">#FF4081</color>
+    <color name="indicator">@color/color</color>
+    <color name="disconnected">@color/primary_dark</color>
+
     <color name="owner">#00ff00</color>
     <color name="client">#ffff00</color>
+    <color name="lighter_gray">#cccccc</color>
 </resources>

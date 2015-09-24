@@ -1,10 +1,34 @@
 package fi.hiit.mobclusta;
 
+import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.IntentFilter;
+import android.net.wifi.p2p.WifiP2pManager;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.os.Bundle;
+import android.view.View;
 
-public class MainActivity extends AppCompatActivity {
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
+import fi.hiit.mobclusta.common.view.SlidingTabLayout;
+
+public class MainActivity extends AppCompatActivity implements NetworkProvider {
+
+    private WifiP2pManager mManager;
+    private WifiP2pManager.Channel mChannel;
+    private BroadcastReceiver mReceiver;
+    private IntentFilter mIntentFilter;
+    private boolean mWifiP2pEnabled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -12,11 +36,112 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         if (savedInstanceState == null) {
+            Log.d("savedinstance IS NULL");
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             SlidingTabsBasicFragment fragment = new SlidingTabsBasicFragment();
             transaction.replace(R.id.sample_content_fragment, fragment);
             transaction.commit();
         }
+
+        mManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
+        mChannel = mManager.initialize(this, getMainLooper(), new WifiP2pManager.ChannelListener() {
+            @Override
+            public void onChannelDisconnected() {
+                Log.d("Channel disconnected");
+            }
+        });
+        mReceiver = new WiFiDirectBroadcastReceiver(mManager, mChannel, this);
+        mIntentFilter = new IntentFilter();
+        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
+        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
     }
 
+    /* register the broadcast receiver with the intent values to be matched */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(mReceiver, mIntentFilter);
+    }
+    /* unregister the broadcast receiver */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mReceiver);
+    }
+
+    public void alert(String title, String msg) {
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(msg)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // continue with delete
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
+    }
+
+    private Set<NetworkListener> networkListeners = new HashSet<>();
+
+    public void wifiEnabled(boolean enabled) {
+        mWifiP2pEnabled = enabled;
+        Iterator<NetworkListener> iterator = networkListeners.iterator();
+        while (iterator.hasNext()) {
+            NetworkListener listener = iterator.next();
+            if (listener == null) {
+                iterator.remove();
+            } else {
+                listener.wifiP2pEnabled(enabled);
+            }
+        }
+    }
+
+    @Override
+    public boolean wifiP2pEnabled() {
+        return mWifiP2pEnabled;
+    }
+    @Override
+    public void addListener(NetworkListener listener) {
+        networkListeners.add(listener);
+    }
+
+    @Override
+    public void removeListener(NetworkListener listener) {
+        networkListeners.remove(listener);
+    }
+
+    @Override
+    public void discoverPeers(final WifiP2pManager.ActionListener listener) {
+        mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
+
+            @Override
+            public void onSuccess() {
+                listener.onSuccess();
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                listener.onFailure(reason);
+            }
+        });
+    }
+
+    @Override
+    public void stopPeerDiscovery(final WifiP2pManager.ActionListener listener) {
+        mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
+
+            @Override
+            public void onSuccess() {
+                listener.onSuccess();
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                listener.onFailure(reason);
+            }
+        });
+    }
 }
