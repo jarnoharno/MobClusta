@@ -11,9 +11,14 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toolbar;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class NetworkFragment extends Fragment implements NetworkListener {
 
@@ -30,6 +35,7 @@ public class NetworkFragment extends Fragment implements NetworkListener {
 
     private boolean mScanning = false;
 
+    private LinearLayout connectedList;
     private LinearLayout availableList;
     private LinearLayout availableScanning;
 
@@ -42,6 +48,7 @@ public class NetworkFragment extends Fragment implements NetworkListener {
         toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(final MenuItem item) {
+                Log.d("scan button clicked: scanning=%b", mScanning);
                 // there should be only one item in the menu
                 item.setEnabled(false);
                 if (!mScanning) {
@@ -61,6 +68,7 @@ public class NetworkFragment extends Fragment implements NetworkListener {
                             item.setEnabled(true);
                             item.setTitle(R.string.action_scan);
                             availableScanning.setVisibility(View.INVISIBLE);
+                            clearList();
                             mScanning = false;
                         }
                     });
@@ -72,6 +80,7 @@ public class NetworkFragment extends Fragment implements NetworkListener {
                             item.setEnabled(true);
                             item.setTitle(R.string.action_scan);
                             availableScanning.setVisibility(View.INVISIBLE);
+                            clearList();
                             mScanning = false;
                         }
 
@@ -89,8 +98,17 @@ public class NetworkFragment extends Fragment implements NetworkListener {
             }
         });
         wifiP2pEnabled(provider.wifiP2pEnabled());
+        connectedList = (LinearLayout) view.findViewById(R.id.connected_list);
         availableList = (LinearLayout) view.findViewById(R.id.available_list);
         availableScanning = (LinearLayout) view.findViewById(R.id.available_scanning);
+        CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkBox);
+        provider.setOwnerIntent(checkBox.isChecked());
+        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                provider.setOwnerIntent(isChecked);
+            }
+        });
         return view;
     }
 
@@ -103,9 +121,17 @@ public class NetworkFragment extends Fragment implements NetworkListener {
         }
     }
 
+    private Map<View, WifiP2pDevice> deviceMap = new HashMap<>();
+
+    public void clearList() {
+        connectedList.removeAllViews();
+        availableList.removeAllViews();
+        deviceMap.clear();
+    }
+
     @Override
     public void setPeerList(WifiP2pDeviceList peers) {
-        availableList.removeAllViews();
+        clearList();
         LayoutInflater layoutInflater = getActivity().getLayoutInflater();
         for (WifiP2pDevice device : peers.getDeviceList()) {
             View view = layoutInflater.inflate(android.R.layout.simple_list_item_2, availableList,
@@ -113,9 +139,89 @@ public class NetworkFragment extends Fragment implements NetworkListener {
             TextView text1 = (TextView) view.findViewById(android.R.id.text1);
             TextView text2 = (TextView) view.findViewById(android.R.id.text2);
             text1.setText(device.deviceName);
-            text2.setText(device.deviceAddress);
-            availableList.addView(view);
+            text2.setText(device.deviceAddress + " (" + statusString(device.status) + ")");
+
+            if (device.status == WifiP2pDevice.CONNECTED) {
+                connectedList.addView(view);
+                view.setOnClickListener(connectedListListener);
+            } else {
+                availableList.addView(view);
+                view.setOnClickListener(deviceListListener);
+            }
+            deviceMap.put(view, device);
         }
+    }
+
+    final View.OnClickListener connectedListListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View v) {
+            final WifiP2pDevice device = deviceMap.get(v);
+            final TextView text1 = (TextView) v.findViewById(android.R.id.text1);
+            provider.removeGroup(new WifiP2pManager.ActionListener() {
+
+                @Override
+                public void onSuccess() {
+                }
+
+                @Override
+                public void onFailure(int reason) {
+                }
+            });
+            text1.setText(device.deviceName + " Disconnecting...");
+        }
+    };
+
+    @Override
+    public void discoveryStopped() {
+        Log.d("discovery stopped");
+        MenuItem item = toolbar.getMenu().getItem(0);
+        item.setEnabled(true);
+        item.setTitle(R.string.action_scan);
+        availableScanning.setVisibility(View.INVISIBLE);
+        mScanning = false;
+    }
+
+    public static String statusString(int status) {
+        switch (status) {
+            case WifiP2pDevice.AVAILABLE:
+                return "available";
+            case WifiP2pDevice.CONNECTED:
+                return "connected";
+            case WifiP2pDevice.FAILED:
+                return "failed";
+            case WifiP2pDevice.INVITED:
+                return "invited";
+            case WifiP2pDevice.UNAVAILABLE:
+                return "unavailable";
+        }
+        return "";
+    }
+
+    final View.OnClickListener deviceListListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View v) {
+            final WifiP2pDevice device = deviceMap.get(v);
+            final TextView text1 = (TextView) v.findViewById(android.R.id.text1);
+            provider.connect(device, new WifiP2pManager.ActionListener() {
+
+                @Override
+                public void onSuccess() {
+                }
+
+                @Override
+                public void onFailure(int reason) {
+                }
+            });
+            text1.setText(device.deviceName + " Connecting...");
+        }
+    };
+
+    @Override
+    public void enableDiscovery(boolean enable) {
+        MenuItem item = toolbar.getMenu().getItem(0);
+        item.setEnabled(enable);
     }
 
 }

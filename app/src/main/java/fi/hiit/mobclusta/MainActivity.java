@@ -5,7 +5,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.IntentFilter;
+import android.net.NetworkInfo;
+import android.net.wifi.p2p.WifiP2pConfig;
+import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
+import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
@@ -30,6 +34,7 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
     private BroadcastReceiver mReceiver;
     private IntentFilter mIntentFilter;
     private boolean mWifiP2pEnabled = false;
+    private boolean mOwnerIntent = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,6 +106,11 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
     }
 
     @Override
+    public void setOwnerIntent(boolean intent) {
+        mOwnerIntent = intent;
+    }
+
+    @Override
     public boolean wifiP2pEnabled() {
         return mWifiP2pEnabled;
     }
@@ -112,6 +122,21 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
     @Override
     public void removeListener(NetworkListener listener) {
         networkListeners.remove(listener);
+    }
+
+    @Override
+    public void removeGroup(final WifiP2pManager.ActionListener actionListener) {
+        mManager.removeGroup(mChannel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                actionListener.onSuccess();
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                actionListener.onFailure(reason);
+            }
+        });
     }
 
     @Override
@@ -146,7 +171,26 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
         });
     }
 
+    @Override
+    public void connect(WifiP2pDevice device, final WifiP2pManager.ActionListener listener) {
+        WifiP2pConfig config = new WifiP2pConfig();
+        config.deviceAddress = device.deviceAddress;
+        config.groupOwnerIntent = mOwnerIntent ? 15 : 0;
+        mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                listener.onSuccess();
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                listener.onFailure(reason);
+            }
+        });
+    }
+
     public void setPeers(WifiP2pDeviceList peers) {
+        Log.d("peers=%s", peers);
         Iterator<NetworkListener> iterator = networkListeners.iterator();
         while (iterator.hasNext()) {
             NetworkListener listener = iterator.next();
@@ -154,6 +198,19 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                 iterator.remove();
             } else {
                 listener.setPeerList(peers);
+            }
+        }
+    }
+
+    public void connectionChanged(WifiP2pInfo p2pInfo, NetworkInfo networkInfo) {
+        Iterator<NetworkListener> iterator = networkListeners.iterator();
+        while (iterator.hasNext()) {
+            NetworkListener listener = iterator.next();
+            if (listener == null) {
+                iterator.remove();
+            } else {
+                listener.discoveryStopped();
+                listener.wifiP2pEnabled(!p2pInfo.groupFormed);
             }
         }
     }
