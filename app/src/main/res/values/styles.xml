@@ -16,6 +16,7 @@
         <item name="android:colorControlActivated">@color/primary</item>
         <item name="android:indeterminateTintMode">src_atop</item>
         <item name="android:indeterminateTint">@color/primary_dark</item>
+        <item name="android:tintMode">src_atop</item>
     </style>
 
     <style name="AppTheme.Toolbar" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">

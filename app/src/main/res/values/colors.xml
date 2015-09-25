@@ -7,7 +7,7 @@
     <color name="indicator">@color/color</color>
     <color name="disconnected">@color/primary_dark</color>
 
-    <color name="owner">#00ff00</color>
-    <color name="client">#ffff00</color>
+    <color name="owner">#3aff50</color>
+    <color name="client">#f9fb0d</color>
     <color name="lighter_gray">#cccccc</color>
 </resources>

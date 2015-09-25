@@ -16,6 +16,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -35,11 +36,15 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
     private IntentFilter mIntentFilter;
     private boolean mWifiP2pEnabled = false;
     private boolean mOwnerIntent = false;
+    private TextView indicatorText;
+    private View indicatorLight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        indicatorText = (TextView) findViewById(R.id.indicator_text);
+        indicatorLight = findViewById(R.id.indicator_light);
 
         if (savedInstanceState == null) {
             Log.d("savedinstance IS NULL");
@@ -93,6 +98,13 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
     private Set<NetworkListener> networkListeners = new HashSet<>();
 
     public void wifiEnabled(boolean enabled) {
+        if (enabled) {
+            indicatorText.setText("Disconnected");
+            indicatorLight.setBackground(getResources().getDrawable(R.drawable.circle));
+        } else {
+            indicatorText.setText("Unavailable");
+            indicatorLight.setBackground(getResources().getDrawable(R.drawable.circle));
+        }
         mWifiP2pEnabled = enabled;
         Iterator<NetworkListener> iterator = networkListeners.iterator();
         while (iterator.hasNext()) {
@@ -203,6 +215,18 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
     }
 
     public void connectionChanged(WifiP2pInfo p2pInfo, NetworkInfo networkInfo) {
+        if (p2pInfo.groupFormed) {
+            if (p2pInfo.isGroupOwner) {
+                indicatorText.setText("Owner");
+                indicatorLight.setBackground(getResources().getDrawable(R.drawable.circle_owner));
+            } else {
+                indicatorText.setText("Client");
+                indicatorLight.setBackground(getResources().getDrawable(R.drawable.circle_client));
+            }
+        } else {
+            indicatorText.setText("Disconnected");
+            indicatorLight.setBackground(getResources().getDrawable(R.drawable.circle));
+        }
         Iterator<NetworkListener> iterator = networkListeners.iterator();
         while (iterator.hasNext()) {
             NetworkListener listener = iterator.next();
