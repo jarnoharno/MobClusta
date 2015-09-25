@@ -11,7 +11,6 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.os.Bundle;
@@ -27,20 +26,13 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
-import fi.hiit.mobclusta.common.view.SlidingTabLayout;
 
 public class MainActivity extends AppCompatActivity implements NetworkProvider {
 
@@ -224,6 +216,16 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
     }
 
     public void setPeers(WifiP2pDeviceList peers) {
+        int connectedTotal = 0;
+        for (WifiP2pDevice device : peers.getDeviceList()) {
+            if (device.status == WifiP2pDevice.CONNECTED) {
+                ++connectedTotal;
+            }
+        }
+        mConnected = connectedTotal;
+        if (state == State.Owner) {
+            setOwnerIndicator();
+        }
         Log.d("peers=%s", peers);
         Iterator<NetworkListener> iterator = networkListeners.iterator();
         while (iterator.hasNext()) {
@@ -263,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                 clientSocket.connect(new InetSocketAddress(groupOwnerAddress, PORT));
                 InputStream in = clientSocket.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(in, Charset.defaultCharset()));
-                Log.d("socket connected");
+                Log.d("socket mConnected");
                 try {
                     for (;;) {
                         String line = reader.readLine();
@@ -343,7 +345,7 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
             try {
                 for (;;) {
                     Socket client = serverSocket.accept();
-                    Log.d("socket connected");
+                    Log.d("socket mConnected");
                     addSocket(client);
                 }
             } catch (IOException e) {
@@ -377,19 +379,29 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
 
     private State state = State.Disconnected;
 
+    private int mConnected = 0;
+
+    private void setOwnerIndicator() {
+        state = State.Owner;
+        indicatorText.setText("Owner (" + mConnected + ")");
+        indicatorLight.setBackground(getResources().getDrawable(R.drawable.circle_owner));
+    }
+
     public void connectionChanged(WifiP2pInfo p2pInfo, NetworkInfo networkInfo) {
         if (p2pInfo.groupFormed) {
             if (p2pInfo.isGroupOwner) {
-                state = State.Owner;
-                indicatorText.setText("Owner");
-                indicatorLight.setBackground(getResources().getDrawable(R.drawable.circle_owner));
-                startServer();
+                if (state == State.Disconnected) {
+                    startServer();
+                }
+                setOwnerIndicator();
             } else {
+                if (state == State.Disconnected) {
+                    startClient();
+                }
                 state = State.Client;
                 indicatorText.setText("Client");
                 indicatorLight.setBackground(getResources().getDrawable(R.drawable.circle_client));
                 groupOwnerAddress = p2pInfo.groupOwnerAddress;
-                startClient();
             }
         } else {
             if (state == State.Owner) {
