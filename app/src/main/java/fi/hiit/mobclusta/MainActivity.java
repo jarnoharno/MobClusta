@@ -18,13 +18,27 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import fi.hiit.mobclusta.common.view.SlidingTabLayout;
 
@@ -38,10 +52,12 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
     private boolean mOwnerIntent = false;
     private TextView indicatorText;
     private View indicatorLight;
+    private ExecutorService pool;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        pool = Executors.newCachedThreadPool();
         setContentView(R.layout.activity_main);
         indicatorText = (TextView) findViewById(R.id.indicator_text);
         indicatorLight = findViewById(R.id.indicator_light);
@@ -67,6 +83,12 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+    }
+
+    @Override
+    protected void onDestroy() {
+        pool.shutdown();
+        super.onDestroy();
     }
 
     /* register the broadcast receiver with the intent values to be matched */
@@ -214,16 +236,168 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
         }
     }
 
+    public static int PORT = 8888;
+
+    // client
+
+    private Socket clientSocket;
+    private InetAddress groupOwnerAddress;
+    private Future<?> clientFuture;
+
+    public void startClient() {
+        clientSocket = new Socket();
+        try {
+            clientSocket.bind(null);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        clientFuture = pool.submit(clientLoop);
+    }
+
+    private final Runnable clientLoop = new Runnable() {
+
+        @Override
+        public void run() {
+            try {
+                clientSocket.connect(new InetSocketAddress(groupOwnerAddress, PORT));
+                InputStream in = clientSocket.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(in, Charset.defaultCharset()));
+                Log.d("socket connected");
+                try {
+                    for (;;) {
+                        String line = reader.readLine();
+                        Log.d(line);
+                    }
+                } catch (IOException e) {
+                    Log.d("socket closing");
+                    return;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            } finally {
+                try {
+                    clientSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    };
+
+    void stopClient() {
+        try {
+            clientSocket.close();
+            try {
+                clientFuture.get();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        clientFuture = null;
+        clientSocket = null;
+        Log.d("socket closed");
+    }
+
+    // server
+
+    private ServerSocket serverSocket;
+    private Future<?> serverFuture;
+
+    public void startServer() {
+        try {
+            serverSocket = new ServerSocket(PORT);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        serverFuture = pool.submit(serverLoop);
+    }
+
+    // only synchronized access allowed
+    private Set<Socket> sockets = new HashSet<>();
+
+    public synchronized void addSocket(Socket client) {
+        sockets.add(client);
+    }
+
+    public synchronized void closeAllSockets() {
+        for (Socket socket : sockets) {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        sockets.clear();
+    }
+
+    private final Runnable serverLoop = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                for (;;) {
+                    Socket client = serverSocket.accept();
+                    Log.d("socket connected");
+                    addSocket(client);
+                }
+            } catch (IOException e) {
+                Log.d("server stopping");
+            }
+        }
+    };
+
+    public void stopServer() {
+        try {
+            serverSocket.close();
+            try {
+                serverFuture.get();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        closeAllSockets();
+        Log.d("server stopped");
+    }
+
+    public enum State {
+        Owner,
+        Client,
+        Disconnected
+    }
+
+    private State state = State.Disconnected;
+
     public void connectionChanged(WifiP2pInfo p2pInfo, NetworkInfo networkInfo) {
         if (p2pInfo.groupFormed) {
             if (p2pInfo.isGroupOwner) {
+                state = State.Owner;
                 indicatorText.setText("Owner");
                 indicatorLight.setBackground(getResources().getDrawable(R.drawable.circle_owner));
+                startServer();
             } else {
+                state = State.Client;
                 indicatorText.setText("Client");
                 indicatorLight.setBackground(getResources().getDrawable(R.drawable.circle_client));
+                groupOwnerAddress = p2pInfo.groupOwnerAddress;
+                startClient();
             }
         } else {
+            if (state == State.Owner) {
+                stopServer();
+            } else if (state == State.Client) {
+                stopClient();
+            }
+            state = State.Disconnected;
             indicatorText.setText("Disconnected");
             indicatorLight.setBackground(getResources().getDrawable(R.drawable.circle));
         }
