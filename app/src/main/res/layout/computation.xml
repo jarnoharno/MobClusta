@@ -35,6 +35,8 @@
                         android:id="@+id/width"
                         android:layout_gravity="center_horizontal"
                         android:layout_weight="1"
+                        android:digits="0123456789"
+                        android:inputType="number"
                         android:text="350" />
                     <TextView
                         android:layout_width="wrap_content"
@@ -47,6 +49,8 @@
                         android:id="@+id/height"
                         android:layout_gravity="center_horizontal"
                         android:layout_weight="1"
+                        android:digits="0123456789"
+                        android:inputType="number"
                         android:text="200" />
                 </LinearLayout>
                 <LinearLayout
@@ -64,6 +68,8 @@
                         android:id="@+id/tasks"
                         android:layout_gravity="center_horizontal"
                         android:layout_weight="1"
+                        android:digits="0123456789"
+                        android:inputType="number"
                         android:text="24" />
                 </LinearLayout>
                 <LinearLayout
@@ -81,6 +87,8 @@
                         android:id="@+id/subsamples"
                         android:layout_gravity="center_horizontal"
                         android:layout_weight="1"
+                        android:digits="0123456789"
+                        android:inputType="number"
                         android:text="8" />
                 </LinearLayout>
                 <LinearLayout
@@ -98,6 +106,8 @@
                         android:id="@+id/maxiterations"
                         android:layout_gravity="center_horizontal"
                         android:layout_weight="1"
+                        android:digits="0123456789"
+                        android:inputType="number"
                         android:text="100" />
                 </LinearLayout>
             </LinearLayout>
@@ -120,6 +130,15 @@
         </LinearLayout>
 
     </ScrollView>
-    <include layout="@layout/toolbar_bottom" android:id="@+id/toolbar_computation"/>
+    <Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+        android:titleTextAppearance="@style/AppTheme.Toolbar"
+        android:id="@+id/toolbar_computation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="?android:attr/actionBarSize"
+        android:background="?android:attr/colorPrimary"
+        >
+
+    </Toolbar>
 
 </LinearLayout>

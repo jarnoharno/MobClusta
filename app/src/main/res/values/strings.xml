@@ -10,4 +10,6 @@
     <string name="action_settings">Settings</string>
     <string name="action_scan">Scan peers</string>
     <string name="action_stop_scan">Stop scanning</string>
+    <string name="action_start">Start computation</string>
+    <string name="action_stop">Stop computation</string>
 </resources>

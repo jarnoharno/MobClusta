@@ -22,7 +22,7 @@ import java.util.Map;
 
 public class NetworkFragment extends Fragment implements NetworkListener {
 
-    Toolbar toolbar;
+    private Toolbar toolbar;
 
     private NetworkProvider provider;
 
