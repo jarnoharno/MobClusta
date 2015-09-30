@@ -34,6 +34,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import fi.hiit.mobclusta.common.view.LogInterface;
+
 public class MainActivity extends AppCompatActivity implements NetworkProvider {
 
     private WifiP2pManager mManager;
@@ -339,13 +341,21 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
         sockets.clear();
     }
 
+    private void log(String format, Object... args) {
+        Log.d(format, args);
+        if (logInterface == null) return;
+        logInterface.d(format, args);
+    }
+
     private final Runnable serverLoop = new Runnable() {
         @Override
         public void run() {
+            log("server started");
             try {
                 for (;;) {
                     Socket client = serverSocket.accept();
-                    Log.d("socket mConnected");
+                    Log.d("server socket connected");
+                    log("client connected");
                     addSocket(client);
                 }
             } catch (IOException e) {
@@ -369,6 +379,14 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
         }
         closeAllSockets();
         Log.d("server stopped");
+    }
+
+    private LogInterface logInterface = null;
+
+    public void setLog(LogInterface log) {
+        Log.d("log interface set");
+        this.logInterface = log;
+        this.logInterface.d("Initialized");
     }
 
     public enum State {

@@ -10,12 +10,97 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Computsion"
-                android:id="@+id/connected_label"
-                style="@style/AppTheme.SubTitle"/>
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Master"
+                    android:id="@+id/connected_label"
+                    style="@style/AppTheme.SubTitle"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Width"
+                        style="@style/AppTheme.SubTitle.SubSubTitle"/>
+                    <EditText
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/width"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_weight="1"
+                        android:text="350" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Height"
+                        style="@style/AppTheme.SubTitle.SubSubTitle"/>
+                    <EditText
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/height"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_weight="1"
+                        android:text="200" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tasks"
+                        style="@style/AppTheme.SubTitle.SubSubTitle"/>
+                    <EditText
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/tasks"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_weight="1"
+                        android:text="24" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Subsamples"
+                        style="@style/AppTheme.SubTitle.SubSubTitle"/>
+                    <EditText
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/subsamples"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_weight="1"
+                        android:text="8" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Max iterations"
+                        style="@style/AppTheme.SubTitle.SubSubTitle"/>
+                    <EditText
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/maxiterations"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_weight="1"
+                        android:text="100" />
+                </LinearLayout>
+            </LinearLayout>
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -23,9 +108,15 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="KEK"
+                android:text="Log"
                 android:id="@+id/available_label"
                 style="@style/AppTheme.SubTitle"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:id="@+id/log"
+                style="@style/AppTheme.SubTitle.SubSubTitle.Log" />
         </LinearLayout>
 
     </ScrollView>

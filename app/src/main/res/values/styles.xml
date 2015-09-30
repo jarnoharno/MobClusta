@@ -35,4 +35,13 @@
         <item name="android:paddingRight">16dp</item>
     </style>
 
+    <style name="AppTheme.SubTitle.SubSubTitle">
+        <item name="android:textColor">?android:colorForeground</item>
+    </style>
+
+    <style name="AppTheme.SubTitle.SubSubTitle.Log">
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textSize">8dp</item>
+    </style>
+
 </resources>
