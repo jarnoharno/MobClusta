@@ -41,17 +41,17 @@ public class ComputationFragment extends Fragment implements LogInterface {
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 
-    private String presentation(String format, Object... args) {
-        return "[" + dateFormat.format(new Date()) + "] " + String.format(format, args) + "\n";
+    private String presentation(String s) {
+        return "[" + dateFormat.format(new Date()) + "] " + s + "\n";
     }
 
     @Override
-    public void d(String format, Object... args) {
-        String s = presentation(format, args);
+    public void d(String s) {
+        String p = presentation(s);
         if (log == null) {
-            backlog.add(s);
+            backlog.add(p);
         } else {
-            log.append(s);
+            log.append(p);
         }
     }
 }

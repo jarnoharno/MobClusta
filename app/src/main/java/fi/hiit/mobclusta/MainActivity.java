@@ -267,14 +267,14 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                 clientSocket.connect(new InetSocketAddress(groupOwnerAddress, PORT));
                 InputStream in = clientSocket.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(in, Charset.defaultCharset()));
-                Log.d("socket mConnected");
+                log("socket connected");
                 try {
                     for (;;) {
                         String line = reader.readLine();
-                        Log.d(line);
+                        log(line);
                     }
                 } catch (IOException e) {
-                    Log.d("socket closing");
+                    log("socket closing");
                     return;
                 }
             } catch (IOException e) {
@@ -305,7 +305,7 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
         }
         clientFuture = null;
         clientSocket = null;
-        Log.d("socket closed");
+        log("socket closed");
     }
 
     // server
@@ -344,7 +344,13 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
     private void log(String format, Object... args) {
         Log.d(format, args);
         if (logInterface == null) return;
-        logInterface.d(format, args);
+        final String s = String.format(format, args);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                logInterface.d(s);
+            }
+        });
     }
 
     private final Runnable serverLoop = new Runnable() {
@@ -354,12 +360,11 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
             try {
                 for (;;) {
                     Socket client = serverSocket.accept();
-                    Log.d("server socket connected");
                     log("client connected");
                     addSocket(client);
                 }
             } catch (IOException e) {
-                Log.d("server stopping");
+                log("server stopping");
             }
         }
     };
@@ -378,7 +383,7 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
             e.printStackTrace();
         }
         closeAllSockets();
-        Log.d("server stopped");
+        log("server stopped");
     }
 
     private LogInterface logInterface = null;
