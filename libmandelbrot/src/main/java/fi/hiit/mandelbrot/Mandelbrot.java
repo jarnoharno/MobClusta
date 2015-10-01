@@ -50,6 +50,21 @@ public class Mandelbrot {
         return strip(w, h, h0, striph, subsamples, max_iteration);
     }
 
+    public static int stripHeight(int h, int task, int tasks) {
+        int striph = h / tasks;
+        int h0 = task * striph;
+        if (task == tasks - 1) {
+            striph = h - h0;
+        }
+        return striph;
+    }
+
+    public static int stripStart(int h, int task, int tasks) {
+        int striph = h / tasks;
+        int h0 = task * striph;
+        return h0;
+    }
+
     public static double[][] image(int w, int h, int subsamples, long max_iterations) {
         return strip(w, h, 0, h, subsamples, max_iterations);
     }

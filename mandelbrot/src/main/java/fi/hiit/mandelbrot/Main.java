@@ -18,6 +18,7 @@ import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Main {
 
@@ -52,6 +53,13 @@ public class Main {
                 try {
                     double[][] img = Mandelbrot.stripTask(params.width, params.height,
                             task, params.tasks, params.subsamples, params.maxIterations);
+                    long iterations = 0;
+                    for (int y = 0; y < img.length; ++y) {
+                        for (int x = 0; x < img[y].length; ++x) {
+                            iterations += (long) img[y][x] * params.subsamples;
+                        }
+                    }
+                    totalIterations.getAndAdd(iterations);
                     write(img);
                     printf("task (%d/%d) finished", task + 1, params.tasks);
                     return img;
@@ -89,8 +97,12 @@ public class Main {
         });
     }
 
+    private AtomicLong totalIterations = new AtomicLong();
+
     void run() {
         printParams();
+        totalIterations.set(0);
+        long start = System.currentTimeMillis();
         for (int i = 0; i < params.tasks; ++i) {
             runTask(i);
         }
@@ -101,6 +113,15 @@ public class Main {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        long total = System.currentTimeMillis()-start;
+        printf("computation finished in %,d milliseconds\n" +
+                        "Received %,d bytes data\n" +
+                        "Total max iterations %,d\n" +
+                        "Total actual iterations %,d",
+                total,
+                params.imageBytes(),
+                params.totalIterations(),
+                totalIterations.get());
         executorService.shutdown();
     }
 

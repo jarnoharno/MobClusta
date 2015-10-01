@@ -12,4 +12,12 @@ public class Params {
     public String outputBase = null;
 
     public Params() {}
+
+    public int imageBytes() {
+        return width*height*8;
+    }
+
+    public long totalIterations() {
+        return width*height*subsamples*maxIterations;
+    }
 }

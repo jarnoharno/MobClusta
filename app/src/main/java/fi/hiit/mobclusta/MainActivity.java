@@ -18,6 +18,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -41,6 +43,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
 
 import fi.hiit.mandelbrot.Mandelbrot;
 import fi.hiit.mobclusta.common.view.LogInterface;
@@ -314,8 +317,17 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                                 params.maxiterations);
                         log("sending results for task (%d/%d)", params.task+1, params.tasks);
                         // send results
+                        DataOutputStream out = new DataOutputStream(new BufferedOutputStream(clientSocket.getOutputStream()));
+                        for (int y = 0; y < strip.length; ++y) {
+                            for (int x = 0; x < strip[y].length; ++x) {
+                                out.writeDouble(strip[y][x]);
+                            }
+                        }
+                        out.flush();
+                        /*
                         ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
                         out.writeUnshared(strip);
+                        */
                     }
                 } catch (Exception e) {
                     log("client error: %s", e.toString());
@@ -515,6 +527,8 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
 
     // tasks write to this array in parallel (in different elements)
     private double[][] image;
+    // total actual iterations
+    private AtomicLong totalIterations = new AtomicLong();
 
     // only synchronized access allowed
     // sockets are transferred to this set when they are given a computation task
@@ -527,10 +541,15 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
             @Override
             public void run() {
                 log("computation started");
-                image = new double[params.height][params.width];
+                long start = System.currentTimeMillis();
+                log("millis");
+                //image = new double[params.height][params.width];
+                totalIterations.set(0);
+                log("added");
                 try {
                     // launch all tasks
                     for (int task = 0; task < params.tasks; ++task) {
+                        log("launching %d", task+1);
                         CompParams c = new CompParams(params);
                         c.task = task;
                         launchTask(c);
@@ -541,7 +560,23 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                     Thread.currentThread().interrupt();
                 }
                 computationTask = null;
-                log("computation done");
+                long totalTime = System.currentTimeMillis()-start;
+                /*
+                long totalIterations = 0;
+                for (int y = 0; y < params.height; ++y) {
+                    for (int x = 0; x < params.width; ++x) {
+                        totalIterations += (long) (image[y][x] * params.subsamples);
+                    }
+                }
+                */
+                log("computation finished in %,d milliseconds\n" +
+                        "Received %,d bytes data\n" +
+                        "Total max iterations %,d\n" +
+                        "Total actual iterations %,d",
+                        totalTime,
+                        params.imageBytes(),
+                        params.totalIterations(),
+                        totalIterations.get());
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -601,14 +636,28 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                 public void run() {
                     try {
                         // write task parameters
-                        log("sending out task (%d/%d)", params.task+1, params.tasks);
+                        log("sending out task (%d/%d)", params.task + 1, params.tasks);
                         ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
                         out.writeObject(params);
                         //out.writeInt(task);
                         // read result
                         //log("waiting results for task (%d/%d)...", params.task+1, params.tasks);
-                        ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-                        double[][] strip = (double[][]) in.readUnshared();
+                        DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+                        int striph = Mandelbrot.stripHeight(params.height, params.task, params.tasks);
+                        int h0 = Mandelbrot.stripStart(params.height, params.task, params.tasks);
+                        //double[][] strip = new double[striph][h0]
+                        long iterations = 0;
+                        for (int y = 0; y < striph; ++y) {
+                            for (int x = 0; x < params.width; ++x) {
+                                //image[y+h0][x] = in.readDouble();
+                                iterations += (long) (in.readDouble() * params.subsamples);
+                            }
+                        }
+                        totalIterations.getAndAdd(iterations);
+
+                        /*
+                        //ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+                        //double[][] strip = (double[][]) in.readUnshared();
                         // merge result
                         //log("merging results for task (%d/%d)", params.task+1, params.tasks);
                         int striph = params.height / params.tasks;
@@ -619,12 +668,13 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                                 image[y + h0][x] = strip[y][x];
                             }
                         }
+                        */
                     } catch (Exception e) {
                         log("task error: %s", e.toString());
                     }
                     // return socket to available socket list
                     reattachSocket(socket);
-                    log("task (%d/%d) done", params.task+1, params.tasks);
+                    log("task (%d/%d) done", params.task + 1, params.tasks);
                 }
             });
             computationSockets.put(socket, future);

@@ -24,6 +24,14 @@ public class CompParams implements Serializable {
         this.task = compParams.task;
     }
 
+    public int imageBytes() {
+        return width*height*8;
+    }
+
+    public long totalIterations() {
+        return width*height*subsamples*maxiterations;
+    }
+
     public void write(DataOutputStream out) throws IOException {
         out.write(width);
         out.write(height);
