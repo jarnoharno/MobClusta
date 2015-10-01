@@ -29,7 +29,7 @@ public class CompParams implements Serializable {
     }
 
     public long totalIterations() {
-        return width*height*subsamples*maxiterations;
+        return ((long) width)*height*subsamples*maxiterations;
     }
 
     public void write(DataOutputStream out) throws IOException {

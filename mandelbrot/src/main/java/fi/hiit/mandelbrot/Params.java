@@ -18,6 +18,6 @@ public class Params {
     }
 
     public long totalIterations() {
-        return width*height*subsamples*maxIterations;
+        return ((long) width)*height*subsamples*maxIterations;
     }
 }
