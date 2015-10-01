@@ -49,6 +49,7 @@ public class ComputationFragment extends Fragment implements LogInterface, Group
                 } else {
                     item.setEnabled(true);
                     item.setTitle(R.string.action_start);
+                    mainActivity.stopComputation();
                 }
                 return true;
             }

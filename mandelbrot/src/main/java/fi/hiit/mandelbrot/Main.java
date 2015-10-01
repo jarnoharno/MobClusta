@@ -49,6 +49,7 @@ public class Main {
         completionService.submit(new Callable<double[][]>() {
             @Override
             public double[][] call() {
+                long start = System.currentTimeMillis();
                 printf("task (%d/%d) started", task + 1, params.tasks);
                 try {
                     double[][] img = Mandelbrot.stripTask(params.width, params.height,
@@ -61,7 +62,8 @@ public class Main {
                     }
                     totalIterations.getAndAdd(iterations);
                     write(img);
-                    printf("task (%d/%d) finished", task + 1, params.tasks);
+                    long total = System.currentTimeMillis()-start;
+                    printf("task (%d/%d) finished (%d ms)", task + 1, params.tasks, total);
                     return img;
                 } catch (Exception e) {
                     printf(e.toString());

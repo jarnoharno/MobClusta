@@ -449,6 +449,9 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
         this.logInterface.d("Initialized");
     }
 
+    public void stopComputation() {
+    }
+
     public enum State {
         Owner,
         Client,
@@ -486,7 +489,7 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                 if (state == State.Disconnected) {
                     mMasterAndConnected = true;
                     startServer();
-                    startClient();
+                    //startClient();
                 }
                 setOwnerIndicator();
             } else {
