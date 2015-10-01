@@ -159,7 +159,10 @@ public class Main {
             if (line.hasOption("h")) {
                 HelpFormatter formatter = new HelpFormatter();
                 formatter.setLongOptSeparator("=");
-                formatter.printHelp("mandelbrot [OPTIONS...] [OUTPUT_BASE]", options);
+                formatter.printHelp("mandelbrot [OPTIONS...] [OUTPUT_BASE]",
+                        "If OUTPUT_BASE is defined, the results for each task will be written to " +
+                        "OUTPUT_BASE.TASK.csv. Otherwise the results will be discarded silently.",
+                        options, "");
                 return;
             }
             if (line.hasOption("d")) {

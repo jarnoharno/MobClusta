@@ -42,6 +42,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import fi.hiit.mandelbrot.Mandelbrot;
 import fi.hiit.mobclusta.common.view.LogInterface;
 
 public class MainActivity extends AppCompatActivity implements NetworkProvider {
@@ -274,56 +275,52 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
         @Override
         public void run() {
             try {
-                boolean ok = false;
-                while (!ok) {
-                    log("connecting");
+                for (;;) {
                     try {
+                        log("connecting");
                         clientSocket.connect(new InetSocketAddress(groupOwnerAddress, PORT), TIMEOUT);
-                        ok = true;
-                    } catch (IOException e) {
-                        log("connection refused at %s:%d", groupOwnerAddress.toString(), PORT);
+                        log("connected");
+                        break;
+                    } catch (Exception e) {
+                        log("connection refused at %s:%d",
+                                groupOwnerAddress == null ? "null" : groupOwnerAddress.toString(),
+                                PORT);
+                        log(e.toString());
                     }
                     try {
-                        Thread.currentThread().sleep(TIMEOUT);
+                        Thread.sleep(TIMEOUT);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
-                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-                ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
                 log("socket connected");
                 try {
                     for (;;) {
                         log("waiting for task...");
+                        ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                        //log("reading parameters...");
                         // read task parameters
-                        CompParams params = (CompParams) in.readUnshared();
-                        int task = in.readInt();
-                        log("received task (%d/%d)", task, params.tasks);
+                        CompParams params = (CompParams) in.readObject();
+                        //log("reading task number...");
+                        //int task = in.readInt();
+                        log("received task (%d/%d)", params.task+1, params.tasks);
                         // compute strip
-                        int striph = params.height / params.tasks;
-                        int h0 = task * striph;
-                        int striph_actual = task == params.tasks - 1 ? params.height - h0 : striph;
-                        double[][] strip = Mandelbrot.strip(
+                        double[][] strip = Mandelbrot.stripTask(
                                 params.width,
                                 params.height,
-                                h0,
-                                striph_actual,
+                                params.task,
+                                params.tasks,
                                 params.subsamples,
-                                params.maxiterations
-                                );
-                        log("sending results for task (%d/%d)", task, params.tasks);
+                                params.maxiterations);
+                        log("sending results for task (%d/%d)", params.task+1, params.tasks);
                         // send results
+                        ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
                         out.writeUnshared(strip);
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
+                } catch (Exception e) {
+                    log("client error: %s", e.toString());
                 }
                 log("socket closing");
-            } catch (IOException e) {
-                e.printStackTrace();
-                return;
             } finally {
                 try {
                     clientSocket.close();
@@ -472,10 +469,12 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
         boolean prevMasterAndConnected = mMasterAndConnected;
         mMasterAndConnected = false;
         if (p2pInfo.groupFormed) {
+            groupOwnerAddress = p2pInfo.groupOwnerAddress;
             if (p2pInfo.isGroupOwner) {
                 if (state == State.Disconnected) {
                     mMasterAndConnected = true;
                     startServer();
+                    startClient();
                 }
                 setOwnerIndicator();
             } else {
@@ -485,7 +484,6 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                 state = State.Client;
                 indicatorText.setText("Client");
                 indicatorLight.setBackground(getResources().getDrawable(R.drawable.circle_client));
-                groupOwnerAddress = p2pInfo.groupOwnerAddress;
             }
         } else {
             if (state == State.Owner) {
@@ -533,13 +531,23 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                 try {
                     // launch all tasks
                     for (int task = 0; task < params.tasks; ++task) {
-                        launchTask(params, task);
+                        CompParams c = new CompParams(params);
+                        c.task = task;
+                        launchTask(c);
                     }
                     // wait for all tasks to finish
                     waitTasks();
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                 }
+                computationTask = null;
+                log("computation done");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mGroupListener.computationDone();
+                    }
+                });
             }
         });
     }
@@ -556,7 +564,7 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
 
     // get next available connected socket
     private synchronized Socket detachSocket() {
-        log("sockets.isEmpty=%b", sockets.isEmpty());
+        //log("sockets.isEmpty=%b", sockets.isEmpty());
         Iterator<Socket> it = sockets.iterator();
         if (!it.hasNext()) return null;
         Socket socket = it.next();
@@ -585,40 +593,38 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
     }
 
     // run from the main computation thread
-    private void launchTask(final CompParams params, final int task) throws InterruptedException {
+    private void launchTask(final CompParams params) throws InterruptedException {
         synchronized (poolMonitor) {
             final Socket socket = getDetachedSocket();
             Future<?> future = pool.submit(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                        ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
                         // write task parameters
-                        log("sending out task (%d/%d)", task, params.tasks);
-                        out.writeUnshared(params);
-                        out.writeInt(task);
+                        log("sending out task (%d/%d)", params.task+1, params.tasks);
+                        ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                        out.writeObject(params);
+                        //out.writeInt(task);
                         // read result
-                        log("waiting results for task (%d/%d)...", task, params.tasks);
+                        //log("waiting results for task (%d/%d)...", params.task+1, params.tasks);
+                        ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
                         double[][] strip = (double[][]) in.readUnshared();
                         // merge result
-                        log("merging results for task (%d/%d)", task, params.tasks);
+                        //log("merging results for task (%d/%d)", params.task+1, params.tasks);
                         int striph = params.height / params.tasks;
-                        int h0 = task * striph;
-                        int striph_actual = task == params.tasks - 1 ? params.height - h0 : striph;
+                        int h0 = params.task * striph;
+                        int striph_actual = params.task == params.tasks - 1 ? params.height - h0 : striph;
                         for (int y = 0; y < striph_actual; ++y) {
                             for (int x = 0; x < params.width; ++x) {
                                 image[y + h0][x] = strip[y][x];
                             }
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
+                    } catch (Exception e) {
+                        log("task error: %s", e.toString());
                     }
                     // return socket to available socket list
                     reattachSocket(socket);
-                    log("task (%d/%d) done", task, params.tasks);
+                    log("task (%d/%d) done", params.task+1, params.tasks);
                 }
             });
             computationSockets.put(socket, future);

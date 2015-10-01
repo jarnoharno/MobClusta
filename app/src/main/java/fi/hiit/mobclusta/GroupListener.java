@@ -9,4 +9,5 @@ public interface GroupListener {
     int getSubsamples();
     int getMaxIterations();
     CompParams getCompParams();
+    void computationDone();
 }

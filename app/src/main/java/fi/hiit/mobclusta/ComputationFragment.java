@@ -135,4 +135,11 @@ public class ComputationFragment extends Fragment implements LogInterface, Group
         compParams.maxiterations = getMaxIterations();
         return compParams;
     }
+
+    @Override
+    public void computationDone() {
+        MenuItem item = toolbar.getMenu().getItem(0);
+        item.setEnabled(true);
+        item.setTitle(R.string.action_start);
+    }
 }
