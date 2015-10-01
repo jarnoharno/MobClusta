@@ -486,8 +486,8 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
         if (p2pInfo.groupFormed) {
             groupOwnerAddress = p2pInfo.groupOwnerAddress;
             if (p2pInfo.isGroupOwner) {
+                mMasterAndConnected = true;
                 if (state == State.Disconnected) {
-                    mMasterAndConnected = true;
                     startServer();
                     //startClient();
                 }
