@@ -4,7 +4,9 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 
 public interface NetworkProvider {
+    void setMasterSlave(boolean masterSlave);
     void setOwnerIntent(boolean intent);
+    void setWorkers(int workers);
     boolean wifiP2pEnabled();
     void discoverPeers(WifiP2pManager.ActionListener listener);
     void stopPeerDiscovery(WifiP2pManager.ActionListener listener);

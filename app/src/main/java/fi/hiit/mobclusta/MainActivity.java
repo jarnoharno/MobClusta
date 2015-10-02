@@ -34,9 +34,11 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -145,9 +147,23 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
         }
     }
 
+    private boolean mMasterSlave = false;
+
+    @Override
+    public void setMasterSlave(boolean masterSlave) {
+        mMasterSlave = masterSlave;
+    }
+
     @Override
     public void setOwnerIntent(boolean intent) {
         mOwnerIntent = intent;
+    }
+
+    private int mWorkers = 1;
+
+    @Override
+    public void setWorkers(int workers) {
+        mWorkers = workers;
     }
 
     @Override
@@ -256,51 +272,63 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
 
     // client
 
-    private Socket clientSocket;
+    private List<Socket> clientSockets = new ArrayList<>();
+    private List<Future<?>> clientFutures = new ArrayList<>();
+
     private InetAddress groupOwnerAddress;
-    private Future<?> clientFuture;
 
     public void startClient() {
-        clientSocket = new Socket();
         try {
-            clientSocket.bind(null);
-        } catch (IOException e) {
+            Thread.sleep(TIMEOUT);
+        } catch (InterruptedException e) {
             e.printStackTrace();
-            return;
         }
-        clientFuture = pool.submit(clientLoop);
+        clientSockets.clear();
+        clientFutures.clear();
+        for (int i = 0; i < mWorkers; ++i) {
+            Socket socket = new Socket();
+            try {
+                socket.bind(null);
+                clientSockets.add(new Socket());
+            } catch (IOException e) {
+                log("failed to bind socket");
+            }
+        }
+        for (Socket socket : clientSockets) {
+            Future<?> clientFuture = pool.submit(new ClientLoop(socket));
+            clientFutures.add(clientFuture);
+        }
     }
 
     private static final int TIMEOUT = 2000;
 
-    private final Runnable clientLoop = new Runnable() {
+    public class ClientLoop implements Runnable {
+
+        private Socket socket;
+
+        public ClientLoop(Socket socket) {
+            this.socket = socket;
+        }
 
         @Override
         public void run() {
             try {
-                for (;;) {
-                    try {
-                        log("connecting");
-                        clientSocket.connect(new InetSocketAddress(groupOwnerAddress, PORT), TIMEOUT);
-                        log("connected");
-                        break;
-                    } catch (Exception e) {
-                        log("connection refused at %s:%d",
-                                groupOwnerAddress == null ? "null" : groupOwnerAddress.toString(),
-                                PORT);
-                        log(e.toString());
-                    }
-                    try {
-                        Thread.sleep(TIMEOUT);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                try {
+                    log("connecting");
+                    socket.connect(new InetSocketAddress(groupOwnerAddress, PORT), TIMEOUT);
+                    log("connected");
+                } catch (Exception e) {
+                    log("connection refused at %s:%d",
+                            groupOwnerAddress == null ? "null" : groupOwnerAddress.toString(),
+                            PORT);
+                    log(e.toString());
+                    return;
                 }
                 log("socket connected");
                 try {
                     for (;;) {
                         log("waiting for task...");
-                        ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                        ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
                         //log("reading parameters...");
                         // read task parameters
                         CompParams params = (CompParams) in.readObject();
@@ -317,7 +345,7 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                                 params.maxiterations);
                         log("sending results for task (%d/%d)", params.task+1, params.tasks);
                         // send results
-                        DataOutputStream out = new DataOutputStream(new BufferedOutputStream(clientSocket.getOutputStream()));
+                        DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                         for (int y = 0; y < strip.length; ++y) {
                             for (int x = 0; x < strip[y].length; ++x) {
                                 out.writeDouble(strip[y][x]);
@@ -335,30 +363,32 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                 log("socket closing");
             } finally {
                 try {
-                    clientSocket.close();
+                    socket.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
-    };
+    }
 
     void stopClient() {
-        try {
-            clientSocket.close();
+        for (int i = 0; i < clientSockets.size(); ++i) {
             try {
-                clientFuture.get();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            } catch (ExecutionException e) {
+                clientSockets.get(i).close();
+                try {
+                    clientFutures.get(i).get();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
+            } catch (IOException e) {
                 e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-        clientFuture = null;
-        clientSocket = null;
-        log("socket closed");
+        clientSockets.clear();
+        clientFutures.clear();
+        log("sockets closed");
     }
 
     // server
@@ -489,7 +519,9 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                 mMasterAndConnected = true;
                 if (state == State.Disconnected) {
                     startServer();
-                    //startClient();
+                    if (mMasterSlave) {
+                        startClient();
+                    }
                 }
                 setOwnerIndicator();
             } else {
@@ -545,14 +577,11 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
             public void run() {
                 log("computation started");
                 long start = System.currentTimeMillis();
-                log("millis");
                 //image = new double[params.height][params.width];
                 totalIterations.set(0);
-                log("added");
                 try {
                     // launch all tasks
                     for (int task = 0; task < params.tasks; ++task) {
-                        log("launching %d", task+1);
                         CompParams c = new CompParams(params);
                         c.task = task;
                         launchTask(c);

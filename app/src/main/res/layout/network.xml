@@ -26,7 +26,35 @@
                     android:textColor="#707070"
                     android:paddingLeft="8dp" />
             </FrameLayout>
-
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp">
+                <CheckBox
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Master runs workers also"
+                    android:id="@+id/master_slave"
+                    android:textColor="#707070"
+                    android:paddingLeft="8dp" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Workers"
+                    style="@style/AppTheme.SubTitle.SubSubTitle"/>
+                <Spinner
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/spinner"
+                    android:layout_gravity="center_horizontal" />
+            </LinearLayout>
 
             <TextView
                 android:layout_width="wrap_content"

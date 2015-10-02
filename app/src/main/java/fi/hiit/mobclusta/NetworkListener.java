@@ -7,4 +7,5 @@ public interface NetworkListener {
     void setPeerList(WifiP2pDeviceList peers);
     void discoveryStopped();
     void enableDiscovery(boolean enable);
+    boolean isMasterSlave();
 }

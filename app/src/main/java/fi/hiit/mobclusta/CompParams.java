@@ -1,8 +1,5 @@
 package fi.hiit.mobclusta;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
 
 public class CompParams implements Serializable {
@@ -32,23 +29,4 @@ public class CompParams implements Serializable {
         return ((long) width)*height*subsamples*maxiterations;
     }
 
-    public void write(DataOutputStream out) throws IOException {
-        out.write(width);
-        out.write(height);
-        out.write(tasks);
-        out.write(subsamples);
-        out.write(maxiterations);
-        out.write(task);
-    }
-
-    public static CompParams read(DataInputStream in) throws IOException {
-        CompParams params = new CompParams();
-        params.width = in.readInt();
-        params.height = in.readInt();
-        params.tasks = in.readInt();
-        params.subsamples = in.readInt();
-        params.maxiterations = in.readInt();
-        params.task = in.readInt();
-        return params;
-    }
 }

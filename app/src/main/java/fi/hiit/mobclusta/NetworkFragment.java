@@ -7,13 +7,19 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toolbar;
 
@@ -109,7 +115,34 @@ public class NetworkFragment extends Fragment implements NetworkListener {
                 provider.setOwnerIntent(isChecked);
             }
         });
+        CheckBox masterSlave = (CheckBox) view.findViewById(R.id.master_slave);
+        provider.setMasterSlave(masterSlave.isChecked());
+        masterSlave.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                provider.setMasterSlave(isChecked);
+            }
+        });
+        Spinner spinner = (Spinner) view.findViewById(R.id.spinner);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getActivity(),
+                R.array.workers_array, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                provider.setWorkers(position+1);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
         return view;
+    }
+
+    private int parseWorkers(String s) {
+        return s.isEmpty() ? 1 : Math.max(Integer.parseInt(s), 1);
     }
 
     @Override
@@ -222,6 +255,14 @@ public class NetworkFragment extends Fragment implements NetworkListener {
     public void enableDiscovery(boolean enable) {
         MenuItem item = toolbar.getMenu().getItem(0);
         item.setEnabled(enable);
+    }
+
+    @Override
+    public boolean isMasterSlave() {
+        View view = getView();
+        if (view == null) return false;
+        CheckBox checkBox = (CheckBox) view.findViewById(R.id.master_slave);
+        return checkBox.isChecked();
     }
 
 }
