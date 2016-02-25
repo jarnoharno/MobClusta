@@ -2,6 +2,10 @@ package fi.hiit.mobclusta;
 
 public class Log {
     public static final String TAG = "mob-clusta";
+    public static void v(String format, Object... args)
+    {
+        android.util.Log.d("mc-computation", String.format(format, args));
+    }
     public static void d(String format, Object... args)
     {
         android.util.Log.d(TAG, String.format(format, args));

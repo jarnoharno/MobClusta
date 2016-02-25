@@ -4,13 +4,13 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
-import android.widget.Toolbar;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,6 +36,7 @@ public class ComputationFragment extends Fragment implements LogInterface, Group
         }
         backlog.clear();
         toolbar = (Toolbar) view.findViewById(R.id.toolbar_computation);
+        toolbar.setBackgroundColor(getResources().getColor(R.color.primary));
         toolbar.inflateMenu(R.menu.menu_computation);
         toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override

@@ -19,7 +19,8 @@
                     android:layout_height="wrap_content"
                     android:text="Master"
                     android:id="@+id/connected_label"
-                    style="@style/AppTheme.SubTitle"/>
+                    />
+                <!--style="@style/AppTheme.SubTitle"-->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -29,7 +30,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Width"
-                        style="@style/AppTheme.SubTitle.SubSubTitle"/>
+                        />
+                    <!--style="@style/AppTheme.SubTitle.SubSubTitle"-->
                     <EditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -43,7 +45,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Height"
-                        style="@style/AppTheme.SubTitle.SubSubTitle"/>
+                        />
+                    <!--style="@style/AppTheme.SubTitle.SubSubTitle"-->
                     <EditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -62,7 +65,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Tasks"
-                        style="@style/AppTheme.SubTitle.SubSubTitle"/>
+                        />
+                    <!--style="@style/AppTheme.SubTitle.SubSubTitle"-->
                     <EditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -81,7 +85,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Subsamples"
-                        style="@style/AppTheme.SubTitle.SubSubTitle"/>
+                        />
+                    <!--style="@style/AppTheme.SubTitle.SubSubTitle"-->
                     <EditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -100,7 +105,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Max iterations"
-                        style="@style/AppTheme.SubTitle.SubSubTitle"/>
+                        />
+                    <!--style="@style/AppTheme.SubTitle.SubSubTitle"-->
                     <EditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -121,25 +127,26 @@
                 android:layout_height="wrap_content"
                 android:text="Log"
                 android:id="@+id/available_label"
-                style="@style/AppTheme.SubTitle"/>
+                />
+            <!--style="@style/AppTheme.SubTitle"-->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text=""
                 android:id="@+id/log"
-                style="@style/AppTheme.SubTitle.SubSubTitle.Log" />
+                />
+            <!--style="@style/AppTheme.SubTitle.SubSubTitle.Log"-->
         </LinearLayout>
 
     </ScrollView>
-    <Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    <android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
         android:titleTextAppearance="@style/AppTheme.Toolbar"
         android:id="@+id/toolbar_computation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="?android:attr/actionBarSize"
-        android:background="?android:attr/colorPrimary"
         >
 
-    </Toolbar>
+    </android.support.v7.widget.Toolbar>
 
 </LinearLayout>

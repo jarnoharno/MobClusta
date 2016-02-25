@@ -15,6 +15,7 @@ import android.provider.ContactsContract;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.TextView;
 
@@ -67,6 +68,8 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
         super.onCreate(savedInstanceState);
         pool = Executors.newCachedThreadPool();
         setContentView(R.layout.activity_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setBackgroundColor(getResources().getColor(R.color.primary));
         indicatorText = (TextView) findViewById(R.id.indicator_text);
         indicatorLight = findViewById(R.id.indicator_light);
 
@@ -324,7 +327,9 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                     log(e.toString());
                     return;
                 }
-                log("socket connected");
+                log("socket connected, local: %s, remote: %s",
+                        socket.getLocalAddress().getHostAddress(),
+                        groupOwnerAddress.getHostAddress());
                 try {
                     for (;;) {
                         log("waiting for task...");
@@ -428,6 +433,18 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
 
     private void log(String format, Object... args) {
         Log.d(format, args);
+        if (logInterface == null) return;
+        final String s = String.format(format, args);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                logInterface.d(s);
+            }
+        });
+    }
+
+    private void vlog(String format, Object... args) {
+        Log.v(format, args);
         if (logInterface == null) return;
         final String s = String.format(format, args);
         runOnUiThread(new Runnable() {
@@ -575,7 +592,7 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
         computationTask = pool.submit(new Runnable() {
             @Override
             public void run() {
-                log("computation started");
+                vlog("computation started");
                 long start = System.currentTimeMillis();
                 //image = new double[params.height][params.width];
                 totalIterations.set(0);
@@ -601,10 +618,10 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                     }
                 }
                 */
-                log("computation finished in %,d milliseconds\n" +
-                        "Received %,d bytes data\n" +
-                        "Total max iterations %,d\n" +
-                        "Total actual iterations %,d",
+                vlog("computation finished in %,d milliseconds\n" +
+                                "Received %,d bytes data\n" +
+                                "Total max iterations %,d\n" +
+                                "Total actual iterations %,d",
                         totalTime,
                         params.imageBytes(),
                         params.totalIterations(),
@@ -668,13 +685,17 @@ public class MainActivity extends AppCompatActivity implements NetworkProvider {
                 public void run() {
                     try {
                         // write task parameters
-                        log("sending out task (%d/%d)", params.task + 1, params.tasks);
+                        vlog("sending: (%d/%d) [%s]", params.task + 1, params.tasks,
+                                socket.getInetAddress().getHostAddress());
                         ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
                         out.writeObject(params);
                         //out.writeInt(task);
                         // read result
-                        //log("waiting results for task (%d/%d)...", params.task+1, params.tasks);
+                        vlog("waiting: (%d/%d) [%s]", params.task + 1, params.tasks,
+                                socket.getInetAddress().getHostAddress());
                         DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+                        vlog("done: (%d/%d) [%s]", params.task + 1, params.tasks,
+                                socket.getInetAddress().getHostAddress());
                         int striph = Mandelbrot.stripHeight(params.height, params.task, params.tasks);
                         int h0 = Mandelbrot.stripStart(params.height, params.task, params.tasks);
                         //double[][] strip = new double[striph][h0]

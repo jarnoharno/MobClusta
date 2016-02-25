@@ -48,7 +48,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Workers"
-                    style="@style/AppTheme.SubTitle.SubSubTitle"/>
+                    />
+                <!--style="@style/AppTheme.SubTitle.SubSubTitle"-->
                 <Spinner
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -61,7 +62,8 @@
                 android:layout_height="wrap_content"
                 android:text="Connected devices"
                 android:id="@+id/connected_label"
-                style="@style/AppTheme.SubTitle"/>
+                />
+            <!--style="@style/AppTheme.SubTitle"-->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -82,7 +84,8 @@
                     android:layout_height="wrap_content"
                     android:text="Available devices"
                     android:id="@+id/available_label"
-                    style="@style/AppTheme.SubTitle"/>
+                    />
+                <!--style="@style/AppTheme.SubTitle"-->
                 <View
                     android:layout_width="0dp"
                     android:layout_height="0dp"
@@ -94,15 +97,17 @@
                     android:visibility="invisible"
                     android:id="@+id/available_scanning">
                     <ProgressBar
+                        android:id="@+id/progress_bar"
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
-                        style="@android:style/Widget.Material.Light.ProgressBar.Small"
                         />
+                    <!--style="@android:style/Widget.Material.Light.ProgressBar.Small"-->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Scanning..."
-                        style="@style/AppTheme.SubTitle.Right"/>
+                        />
+                    <!--style="@style/AppTheme.SubTitle.Right"-->
                 </LinearLayout>
             </LinearLayout>
 
@@ -116,15 +121,14 @@
         </LinearLayout>
 
     </ScrollView>
-    <Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    <android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
         android:titleTextAppearance="@style/AppTheme.Toolbar"
         android:id="@+id/toolbar_network"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="?android:attr/actionBarSize"
-        android:background="?android:attr/colorPrimary"
         >
 
-    </Toolbar>
+    </android.support.v7.widget.Toolbar>
 
 </LinearLayout>

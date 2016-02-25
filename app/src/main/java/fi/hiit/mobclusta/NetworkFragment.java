@@ -7,6 +7,7 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -21,7 +22,6 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toolbar;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,6 +50,7 @@ public class NetworkFragment extends Fragment implements NetworkListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.network, container, false);
         toolbar = (Toolbar) view.findViewById(R.id.toolbar_network);
+        toolbar.setBackgroundColor(getResources().getColor(R.color.primary));
         toolbar.inflateMenu(R.menu.menu_network);
         toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override

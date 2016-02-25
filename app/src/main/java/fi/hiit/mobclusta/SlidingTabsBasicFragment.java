@@ -64,7 +64,7 @@ public class SlidingTabsBasicFragment extends Fragment {
      * This is called after the {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)} has finished.
      * Here we can pick out the {@link View}s we need to configure from the content view.
      *
-     * We set the {@link ViewPager}'s adapter to be an instance of {@link SamplePagerAdapter}. The
+     * We set the {@link ViewPager}'s adapter to be an instance of SamplePagerAdapter. The
      * {@link SlidingTabLayout} is then given the {@link ViewPager} so that it can populate itself.
      *
      * @param view View created in {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}

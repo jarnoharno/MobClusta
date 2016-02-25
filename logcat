@@ -1,0 +1,4 @@
+#!/bin/bash
+device=${1:-dce562d7}
+adb -s $device logcat -c
+adb -s $device logcat -v time mc-computation:D *:S

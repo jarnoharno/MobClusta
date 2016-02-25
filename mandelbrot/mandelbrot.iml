@@ -29,6 +29,5 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="libmandelbrot" exported="" />
     <orderEntry type="library" exported="" name="commons-cli-1.3.1" level="project" />
-    <orderEntry type="library" exported="" name="mandelbrot.mandelbrot" level="project" />
   </component>
 </module>
